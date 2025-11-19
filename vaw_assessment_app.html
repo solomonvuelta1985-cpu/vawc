@@ -1583,12 +1583,66 @@
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('vaw_assessments', JSON.stringify(allAssessments));
+            try {
+                const jsonString = JSON.stringify(allAssessments);
+
+                // Validate before saving
+                if (!jsonString || jsonString === '{}') {
+                    console.warn('Attempting to save empty data');
+                }
+
+                localStorage.setItem('vaw_assessments', jsonString);
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+
+                // Check if quota exceeded
+                if (error.name === 'QuotaExceededError') {
+                    alert('⚠️ STORAGE FULL\n\nYour device storage is full.\n\n✅ SOLUTIONS:\n• Your auto-backups are safe in Downloads\n• Clear browser data to free space\n• Continue using - backups are automatic');
+                } else {
+                    alert('⚠️ SAVE ERROR\n\nCould not save to device storage.\n\n✅ DON\'T WORRY:\n• Auto-backup files were downloaded\n• Data is safe in your Downloads folder\n• You can continue working');
+                }
+            }
         }
 
         function loadFromLocalStorage() {
-            const data = localStorage.getItem('vaw_assessments');
-            return data ? JSON.parse(data) : {};
+            try {
+                const data = localStorage.getItem('vaw_assessments');
+                if (!data) return {};
+
+                const parsed = JSON.parse(data);
+
+                // Validate structure
+                if (typeof parsed !== 'object' || parsed === null) {
+                    throw new Error('Invalid data structure');
+                }
+
+                return parsed;
+            } catch (error) {
+                console.error('Error loading localStorage:', error);
+
+                // Attempt to backup corrupted data
+                const corruptedData = localStorage.getItem('vaw_assessments');
+                if (corruptedData) {
+                    // Save corrupted data for recovery
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    try {
+                        const blob = new Blob([corruptedData], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `CORRUPTED_BACKUP_${timestamp}.txt`;
+                        a.click();
+                    } catch (e) {
+                        console.error('Could not save backup:', e);
+                    }
+                }
+
+                alert('⚠️ DATA CORRUPTION DETECTED\n\nYour saved assessments may be corrupted.\n\n✅ RECOVERY ACTIONS:\n• A backup file has been downloaded\n• Please send this file to your coordinator\n• You can restore from your JSON backups\n\nThe app will now start fresh.');
+
+                // Clear corrupted data
+                localStorage.removeItem('vaw_assessments');
+                return {};
+            }
         }
 
         function loadAssessmentData(data) {

@@ -421,19 +421,61 @@
                 try {
                     const text = await file.text();
                     const data = JSON.parse(text);
+
+                    // VALIDATION: Check if JSON has required structure
+                    if (!data.assessments || typeof data.assessments !== 'object') {
+                        throw new Error('Invalid format: Missing assessments data');
+                    }
+
+                    if (!data.assessor) {
+                        throw new Error('Invalid format: Missing assessor name');
+                    }
+
+                    // Check if assessments object has data
+                    const assessmentCount = Object.keys(data.assessments).length;
+                    if (assessmentCount === 0) {
+                        throw new Error('No assessment data found');
+                    }
+
+                    // Validate at least one assessment has required fields
+                    const firstAssessment = Object.values(data.assessments)[0];
+                    if (!firstAssessment.totalScore && firstAssessment.totalScore !== 0) {
+                        throw new Error('Invalid format: Missing score data');
+                    }
+
                     allRaterData.push(data);
-                    
+
                     document.getElementById(`status-${file.name}`).className = 'status success';
-                    document.getElementById(`status-${file.name}`).textContent = '✓ Loaded';
+                    document.getElementById(`status-${file.name}`).textContent = `✓ Loaded (${assessmentCount} barangays)`;
                 } catch (error) {
                     document.getElementById(`status-${file.name}`).className = 'status error';
-                    document.getElementById(`status-${file.name}`).textContent = '✗ Error';
-                    console.error('Error loading file:', error);
+
+                    // Provide specific error message
+                    let errorMsg = '✗ ';
+                    if (error instanceof SyntaxError) {
+                        errorMsg += 'Corrupted JSON file';
+                    } else {
+                        errorMsg += error.message;
+                    }
+
+                    document.getElementById(`status-${file.name}`).textContent = errorMsg;
+                    console.error(`Error loading ${file.name}:`, error);
                 }
             }
 
-            if (allRaterData.length > 0) {
+            // Show summary of file loading
+            const totalFiles = files.length;
+            const successCount = allRaterData.length;
+            const failedCount = totalFiles - successCount;
+
+            if (successCount > 0) {
+                if (failedCount > 0) {
+                    alert(`⚠️ FILE LOADING COMPLETE\n\n✅ Successfully loaded: ${successCount}/${totalFiles} files\n❌ Failed: ${failedCount} file(s)\n\nCorrupted or invalid files will be skipped.\nConsolidation will proceed with valid files only.`);
+                }
                 setTimeout(() => processData(), 1000);
+            } else {
+                alert('❌ ALL FILES FAILED TO LOAD\n\nPossible reasons:\n• Files are corrupted\n• Wrong file format\n• Files are not valid VAW assessment JSON\n\nPlease check your files and try again.');
+                document.getElementById('fileList').style.display = 'none';
             }
         }
 
