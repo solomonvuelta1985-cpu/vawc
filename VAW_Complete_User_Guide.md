@@ -761,3 +761,7 @@ Downloads folder will have:
 - RichmondRosete_Progress_2of48_2025-01-19.json (after 2nd)
 - RichmondRosete_Progress_3of48_2025-01-19.json (after 3rd)
 Storage Management
+
+
+
+CAN YOU CHANGE THE DESIGN INTO MORE CLEAN UI ,  BUT PROFESSIONAL NO GRADIENT COLOR.  MORE FIT TO MOBILE SCREEN AND NO NEED TO EXACTLY TOUCH THE TICK BOX
