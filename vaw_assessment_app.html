@@ -978,7 +978,7 @@
             });
         })();
 
-        // Barangays array (from your PHP)
+        // Barangays array (ALL 48 OFFICIAL BARANGAYS - CORRECTED)
         const barangays = [
             'Adaoag', 'Agaman (Proper)', 'Agaman Norte', 'Agaman Sur', 'Alba', 'Annayatan',
             'Asassi', 'Asinga-Via', 'Awallan', 'Bacagan', 'Bagunot', 'Barsat East',
@@ -997,23 +997,49 @@
         let assessmentData = {};
         let allAssessments = loadFromLocalStorage() || {};
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            populateBarangayDropdowns();
-            setTodayDate();
-            updateDashboard();
-        });
+        // Initialize - Multiple methods for WebView compatibility
+        function initializeApp() {
+            try {
+                populateBarangayDropdowns();
+                setTodayDate();
+                updateDashboard();
+                console.log('App initialized successfully');
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        }
+
+        // Try multiple initialization methods for Android WebView compatibility
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        window.addEventListener('load', initializeApp);
+
+        // Fallback: Initialize after a short delay (for WebView)
+        setTimeout(initializeApp, 500);
 
         function populateBarangayDropdowns() {
             const selects = ['barangaySelect', 'dashboardBarangay'];
             selects.forEach(id => {
                 const select = document.getElementById(id);
+                if (!select) {
+                    console.warn(`Select element ${id} not found`);
+                    return;
+                }
+
+                // Check if already populated (avoid duplicates)
+                if (select.options.length > 1) {
+                    console.log(`${id} already populated, skipping`);
+                    return;
+                }
+
+                // Populate dropdown
                 barangays.forEach(b => {
                     const option = document.createElement('option');
                     option.value = b;
                     option.textContent = b;
                     select.appendChild(option);
                 });
+
+                console.log(`${id} populated with ${barangays.length} barangays`);
             });
         }
 
